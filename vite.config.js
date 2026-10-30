@@ -46,6 +46,14 @@ export default ({ mode }) => {
       open: true,
       port: Number(env.VITE_CLI_PORT),
       proxy: {
+        // 乘客端移动 H5 → ride-hailing 打车微服务（Kratos，默认 :8000）
+        // 前端统一请求 /ride-api/**，转发时去掉前缀还原成后端 /api/v1/passenger/**
+        // 目标地址可用 VITE_RIDE_API_TARGET 覆盖，默认本机 8000 端口
+        '/ride-api': {
+          target: env.VITE_RIDE_API_TARGET || 'http://127.0.0.1:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ride-api/, '/api')
+        },
         // 把key的路径代理到target位置
         // detail: https://cli.vuejs.org/config/#devserver-proxy
         [env.VITE_BASE_API]: {
