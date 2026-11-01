@@ -24,6 +24,15 @@ const routes = [
     },
     component: () => import('@/view/example/upload/scanUpload.vue')
   },
+  ...(import.meta.env.DEV ? [{
+    path: '/vehicle-hmi-preview',
+    name: 'VehicleHmiPreview',
+    meta: {
+      title: '车辆 HMI 本地预览',
+      client: true
+    },
+    component: () => import('@/view/vehicleHmi/index.vue')
+  }] : []),
   {
     path: '/:catchAll(.*)',
     meta: {

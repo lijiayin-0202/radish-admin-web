@@ -55,6 +55,12 @@ export default ({ mode }) => {
           rewrite: (path) =>
             path.replace(new RegExp('^' + env.VITE_BASE_API), '')
         },
+        [env.VITE_RIDE_HAILING_API]: {
+          target: `${env.VITE_RIDE_HAILING_PATH}:${env.VITE_RIDE_HAILING_PORT}/`,
+          changeOrigin: true,
+          rewrite: (path) =>
+            path.replace(new RegExp('^' + env.VITE_RIDE_HAILING_API), '')
+        },
         '/plugin': {
           // 需要代理的路径   例如 '/api'
           target: `https://plugin.gin-vue-admin.com/api/`, // 代理到 目标路径
