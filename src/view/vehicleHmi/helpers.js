@@ -30,6 +30,13 @@ const phaseByOrderStatus = {
   4: 'completed'
 }
 
+export const hmiPhaseOptions = [
+  { value: 'waiting', label: '等待接单' },
+  { value: 'arrived', label: '车辆到达' },
+  { value: 'riding', label: '行程中' },
+  { value: 'completed', label: '已到达' }
+]
+
 // 将后端订单状态转换成乘客端页面阶段。
 export const resolveTripPhase = (orderStatus) => {
   return phaseByOrderStatus[orderStatus] || 'waiting'

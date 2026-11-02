@@ -1,7 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { mergePreviewTelemetry, resolveTripPhase } from './helpers.js'
+import { hmiPhaseOptions, mergePreviewTelemetry, resolveTripPhase } from './helpers.js'
+
+test('HMI 提供四个可手动切换的行程阶段', () => {
+  assert.deepEqual(hmiPhaseOptions.map((item) => item.value), ['waiting', 'arrived', 'riding', 'completed'])
+})
 
 test('订单状态映射为乘客端行程阶段', () => {
   assert.equal(resolveTripPhase(1), 'waiting')

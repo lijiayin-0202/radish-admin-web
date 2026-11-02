@@ -10,14 +10,14 @@
           <el-input-number v-model="orderId" :min="1" :controls="false" />
         </el-form-item>
       </el-form>
-      <el-descriptions v-if="hmiView" :column="3" border>
-        <el-descriptions-item label="订单状态">{{ orderStatusMap[hmiView.orderStatus] || hmiView.orderStatus }}</el-descriptions-item>
-        <el-descriptions-item label="车辆 ID">{{ hmiView.vehicleId || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="待处理指令">{{ hmiView.pendingCommands?.length || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="预估金额">¥ {{ formatAmount(hmiView.estimatedAmount) }}</el-descriptions-item>
-        <el-descriptions-item label="应付金额">¥ {{ formatAmount(hmiView.payableAmount) }}</el-descriptions-item>
-        <el-descriptions-item label="安全事件">{{ hmiView.safetyIncidents?.length || 0 }}</el-descriptions-item>
-      </el-descriptions>
+      <div v-if="hmiView" class="overview-metrics">
+        <div><span>订单状态</span><b>{{ orderStatusMap[hmiView.orderStatus] || hmiView.orderStatus }}</b></div>
+        <div><span>车辆 ID</span><b>{{ hmiView.vehicleId || '-' }}</b></div>
+        <div><span>待处理指令</span><b>{{ hmiView.pendingCommands?.length || 0 }}</b></div>
+        <div><span>预估金额</span><b>¥ {{ formatAmount(hmiView.estimatedAmount) }}</b></div>
+        <div><span>应付金额</span><b>¥ {{ formatAmount(hmiView.payableAmount) }}</b></div>
+        <div><span>安全事件</span><b>{{ hmiView.safetyIncidents?.length || 0 }}</b></div>
+      </div>
       <el-empty v-else description="输入订单 ID 后读取 HMI 视图" :image-size="70" />
     </section>
 
@@ -34,28 +34,18 @@
           <el-input v-model.trim="commandNo" clearable placeholder="例如 CMD-20261030-001" />
         </el-form-item>
       </el-form>
-      <el-table :data="commands" empty-text="暂无待处理指令" border>
-        <el-table-column prop="commandNo" label="指令编号" min-width="170" />
-        <el-table-column prop="commandType" label="类型" width="70" />
-        <el-table-column prop="priority" label="优先级" width="80" />
-        <el-table-column label="状态" width="100">
-          <template #default="scope">{{ commandStatusMap[scope.row.status] || scope.row.status }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
-          <template #default="scope">
-            <el-button link type="primary" :disabled="scope.row.status !== 1" @click="ack(scope.row)">确认接收</el-button>
-            <el-dropdown @command="handleFinishCommand(scope.row, $event)">
-              <el-button link type="primary" :disabled="scope.row.status !== 2">上报结果<ArrowDown /></el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item :command="true">执行成功</el-dropdown-item>
-                  <el-dropdown-item :command="false">执行失败</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div v-if="commands.length" class="command-list">
+        <article v-for="command in commands" :key="command.commandNo" class="command-card">
+          <div class="command-card__head"><strong>{{ command.commandNo }}</strong><span>{{ commandStatusMap[command.status] || command.status }}</span></div>
+          <div class="command-card__meta"><span>类型 {{ command.commandType }}</span><span>优先级 {{ command.priority }}</span></div>
+          <div class="command-card__actions">
+            <el-button type="primary" plain :disabled="command.status !== 1" @click="ack(command)">确认接收</el-button>
+            <el-button :disabled="command.status !== 2" @click="finish(command, true)">执行成功</el-button>
+            <el-button type="danger" plain :disabled="command.status !== 2" @click="finish(command, false)">执行失败</el-button>
+          </div>
+        </article>
+      </div>
+      <el-empty v-else description="暂无待处理指令" :image-size="64" />
     </section>
   </div>
 </template>
@@ -63,7 +53,7 @@
 <script setup>
 import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown, Refresh, Search } from '@element-plus/icons-vue'
+import { Refresh, Search } from '@element-plus/icons-vue'
 import { acknowledgeCommand, getHmiView, getPendingCommands, reportCommandResult } from '@/api/vehicleHmi'
 import { commandStatusMap, orderStatusMap } from '@/constants/vehicleHmi'
 import { errorMessage } from '../helpers'
@@ -130,10 +120,6 @@ const finish = async (command, succeeded) => {
   }
 }
 
-// 将下拉菜单结果和当前指令显式传入，避免模板插槽作用域被异步闭包捕获。
-const handleFinishCommand = (command, succeeded) => {
-  finish(command, succeeded)
-}
 </script>
 
 <style scoped>
@@ -143,6 +129,8 @@ const handleFinishCommand = (command, succeeded) => {
 .section-heading h3 { margin: 0; color: #1f2937; font-size: 16px; }
 .section-heading p { margin: 5px 0 0; color: #6b7280; font-size: 12px; }
 .section-heading svg { width: 15px; margin-right: 5px; }
+.overview-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.overview-metrics div { display: flex; min-height: 68px; flex-direction: column; justify-content: center; gap: 5px; padding: 10px; border-radius: 10px; background: #f6f7f9; }.overview-metrics span { color: #7a828d; font-size: 11px; }.overview-metrics b { color: #1f2937; font-size: 14px; }
+.command-list { display: grid; gap: 10px; }.command-card { padding: 13px; border: 1px solid #e6e9ed; border-radius: 12px; background: #fafbfc; }.command-card__head, .command-card__meta, .command-card__actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.command-card__head strong { min-width: 0; overflow: hidden; color: #253040; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }.command-card__head span { flex: 0 0 auto; padding: 3px 7px; border-radius: 99px; background: #fff1f1; color: #ac0c14; font-size: 10px; }.command-card__meta { margin-top: 9px; color: #707987; font-size: 11px; }.command-card__actions { display: grid; grid-template-columns: 1fr; margin-top: 12px; }.command-card__actions .el-button { width: 100%; margin-left: 0; }
 :deep(.el-form-item) { margin-bottom: 14px; }
 :deep(.el-input-number), :deep(.el-input) { width: 230px; }
 @media (max-width: 760px) { .section-heading { flex-direction: column; }.section-heading .el-button { width: 100%; }:deep(.el-input-number), :deep(.el-input) { width: 100%; } }

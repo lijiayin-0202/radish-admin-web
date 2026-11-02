@@ -1,5 +1,5 @@
 <template>
-  <section class="preview-shell" aria-label="萝卜快跑乘客端行程预览">
+  <section class="preview-shell passenger-preview" aria-label="萝卜快跑乘客端行程预览">
     <div class="phone-frame">
       <header class="status-bar">
         <span>{{ currentTime }}</span>
@@ -78,9 +78,12 @@
         </div>
 
         <div class="sheet-actions">
-          <button type="button" @click="emit('action', 'support')"><Service />联系客服</button>
+          <button type="button" @click="emit('action', 'trip')"><Tickets />行程指令</button>
+          <button type="button" @click="emit('action', 'boarding')"><Lock />上车核验</button>
           <button type="button" @click="emit('action', 'safety')"><Warning />安全协助</button>
           <button type="button" @click="emit('action', 'vehicle')"><Odometer />车辆状态</button>
+          <button class="fault-action" type="button" @click="emit('action', 'fault')"><Warning />故障上报</button>
+          <button class="pending-action" type="button" disabled><Service />联系客服</button>
         </div>
       </article>
     </div>
@@ -97,6 +100,7 @@ import {
   Lock,
   Odometer,
   Service,
+  Tickets,
   Van,
   Warning
 } from '@element-plus/icons-vue'

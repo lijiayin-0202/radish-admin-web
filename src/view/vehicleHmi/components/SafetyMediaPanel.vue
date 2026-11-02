@@ -1,6 +1,6 @@
 <template>
   <div class="panel-grid">
-    <section class="section-block">
+    <section v-if="activePanel === 'assistance'" class="section-block">
       <div class="section-heading"><Lock /><div><h3>安全协助</h3><p>提交靠边停车或远程协助请求，并触发后端业务事件。</p></div></div>
       <el-form :model="assistance" label-position="top" @submit.prevent>
         <div class="form-grid">
@@ -16,7 +16,7 @@
       </el-form>
     </section>
 
-    <section class="section-block">
+    <section v-else class="section-block">
       <div class="section-heading"><VideoCamera /><div><h3>媒体记录</h3><p>登记视频、音频或系统日志的存储元数据。</p></div></div>
       <el-form :model="media" label-position="top" @submit.prevent>
         <div class="form-grid">
@@ -50,6 +50,7 @@ import { assistanceTypeOptions, mediaTypeOptions } from '@/constants/vehicleHmi'
 import { errorMessage, toIsoString } from '../helpers'
 
 const assistanceLoading = ref(false)
+defineProps({ activePanel: { type: String, default: 'assistance' } })
 const mediaLoading = ref(false)
 const assistanceResult = ref('')
 const mediaResult = ref('')

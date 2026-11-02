@@ -10,12 +10,12 @@
             <el-form-item label="经度"><el-input-number v-model="telemetry.longitude" :min="-180" :max="180" :precision="6" :controls="false" /></el-form-item>
             <el-form-item label="纬度"><el-input-number v-model="telemetry.latitude" :min="-90" :max="90" :precision="6" :controls="false" /></el-form-item>
             <el-form-item label="速度 km/h"><el-input-number v-model="telemetry.speedKmh" :min="0" :precision="1" /></el-form-item>
-            <el-form-item label="电量 %"><el-slider v-model="telemetry.batteryPercent" show-input /></el-form-item>
-            <el-form-item label="路线进度 %"><el-slider v-model="telemetry.routeProgressPercent" show-input /></el-form-item>
+          <el-form-item label="电量 %"><el-input-number v-model="telemetry.batteryPercent" :min="0" :max="100" :precision="0" /></el-form-item>
+          <el-form-item label="路线进度 %"><el-input-number v-model="telemetry.routeProgressPercent" :min="0" :max="100" :precision="0" /></el-form-item>
             <el-form-item label="剩余里程 km"><el-input-number v-model="telemetry.remainingDistanceKm" :min="0" :precision="1" /></el-form-item>
             <el-form-item label="续航里程 km"><el-input-number v-model="telemetry.remainingRangeKm" :min="0" :precision="1" /></el-form-item>
             <el-form-item label="车内温度 ℃"><el-input-number v-model="telemetry.cabinTemperature" :precision="1" /></el-form-item>
-            <el-form-item label="网络信号 %"><el-slider v-model="telemetry.networkSignal" show-input /></el-form-item>
+          <el-form-item label="网络信号 %"><el-input-number v-model="telemetry.networkSignal" :min="0" :max="100" :precision="0" /></el-form-item>
             <el-form-item label="航向角"><el-input-number v-model="telemetry.headingDegree" :min="0" :max="359.9" :precision="1" /></el-form-item>
             <el-form-item label="定位精度 m"><el-input-number v-model="telemetry.positionAccuracyM" :min="0" :precision="1" /></el-form-item>
             <el-form-item label="软件版本"><el-input v-model.trim="telemetry.softwareVersion" /></el-form-item>
@@ -33,7 +33,7 @@
         </el-form>
       </el-tab-pane>
 
-      <el-tab-pane label="故障上报" name="fault">
+      <el-tab-pane v-if="showFault" label="故障上报" name="fault">
         <el-form :model="fault" label-position="top" @submit.prevent>
           <div class="form-grid cols-three">
             <el-form-item label="故障编号"><el-input v-model.trim="fault.faultNo" /></el-form-item>
@@ -64,6 +64,9 @@ import { faultLevelOptions, operationStatusOptions } from '@/constants/vehicleHm
 import { errorMessage, parseJsonObject } from '../helpers'
 
 const emit = defineEmits(['telemetry-reported'])
+defineProps({
+  showFault: { type: Boolean, default: true }
+})
 const activeTab = ref('telemetry')
 const telemetryLoading = ref(false)
 const faultLoading = ref(false)
