@@ -3,9 +3,9 @@ import mobileRoutes, { installMobileGuard } from '@/mobile/router'
 
 const routes = [
   {
-    // 站点入口即萝卜快跑登录页；后台管理登录仍保留在 /login
+    // 站点入口跳后台管理登录；乘客端 H5 保留在 /m/**（含 /m/login）
     path: '/',
-    redirect: '/m/login'
+    redirect: '/login'
   },
   {
     path: '/init',
