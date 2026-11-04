@@ -103,6 +103,7 @@
   "/src/view/trip/dispatch/dispatch.vue": "Dispatch",
   "/src/view/trip/fault/fault.vue": "Fault",
   "/src/view/trip/incident/incident.vue": "Incident",
+  "/src/view/trip/operationDispatch.vue": "OperationDispatch",
   "/src/view/trip/order/order.vue": "Order",
   "/src/view/trip/passenger/passenger.vue": "Passenger",
   "/src/view/trip/station/station.vue": "Station",
