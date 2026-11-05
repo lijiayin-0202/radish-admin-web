@@ -1,1 +1,11 @@
 node_modules/
+.git
+.idea/
+.vscode/
+*.md
+*.log
+tmp/
+testdata/
+# 编译产物
+*.exe
+bin/
