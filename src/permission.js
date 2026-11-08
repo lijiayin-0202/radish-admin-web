@@ -1,6 +1,7 @@
 import { useUserStore } from '@/pinia/modules/user'
 import { useRouterStore } from '@/pinia/modules/router'
 import getPageTitle from '@/utils/page'
+import { createOperationDispatchRoute, isOperationDispatchMenu } from '@/utils/module3Route'
 import router from '@/router'
 import Nprogress from 'nprogress'
 import 'nprogress/nprogress.css'
@@ -43,6 +44,11 @@ function addRouteByChildren(route, segments = [], parentName = null) {
   // 跳过外链根节点
   if (isExternalUrl(route?.path) || isExternalUrl(route?.name) || isExternalUrl(route?.component)) {
     return
+  }
+
+  // 后台菜单只提供标识，模块 3 页面组件由前端明确绑定，避免生成空组件路由。
+  if (isOperationDispatchMenu(route)) {
+    route = createOperationDispatchRoute(route)
   }
 
   // 顶层 layout 仅用于承载，不参与路径拼接
