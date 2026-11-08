@@ -1,265 +1,86 @@
 <template>
-  <div class="ride-passenger-page">
-    <el-card shadow="never" class="filter-card">
-      <div class="filter-bar">
-        <div class="filter-title">
-          <h2>乘客管理</h2>
-          <span>乘客档案、实名状态与账户状态查询</span>
-        </div>
-        <div class="filter-actions">
-          <el-select v-model="query.realNameStatus" placeholder="实名状态" clearable class="status-select" @change="search">
-            <el-option v-for="item in realNameOptions" :key="item.value" :label="item.label" :value="String(item.value)" />
-          </el-select>
-          <el-select v-model="query.accountStatus" placeholder="账户状态" clearable class="status-select" @change="search">
-            <el-option v-for="item in accountOptions" :key="item.value" :label="item.label" :value="String(item.value)" />
-          </el-select>
-          <el-input v-model="query.keyword" placeholder="乘客号 / 手机号 / 昵称 / ID" clearable class="keyword-input" @keyup.enter="search" />
-          <el-button type="primary" :loading="loading" @click="search">查询</el-button>
-          <el-button @click="resetQuery">重置</el-button>
-        </div>
-      </div>
-    </el-card>
-
-    <el-card shadow="never">
-      <el-table v-loading="loading" :data="passengers" stripe style="width: 100%">
-        <el-table-column prop="passengerId" label="乘客ID" width="90" align="center" />
-        <el-table-column prop="passengerNo" label="乘客号" min-width="150" show-overflow-tooltip />
-        <el-table-column label="乘客" min-width="180">
-          <template #default="{ row }">
-            <div class="passenger-cell">
-              <el-avatar :size="28" :src="row.avatarUrl || undefined">{{ (row.nickname || '乘').slice(0, 1) }}</el-avatar>
-              <div class="passenger-meta">
-                <span class="nickname">{{ row.nickname || '未设置昵称' }}</span>
-                <span class="mobile">{{ row.mobile || '-' }}</span>
-              </div>
-            </div>
+  <div>
+    <div class="gva-search-box">
+      <el-form :inline="true" :model="searchInfo">
+        <el-form-item label="关键词">
+          <el-input v-model="searchInfo.keyword" placeholder="手机号/昵称" clearable @keyup.enter="getTableData" />
+        </el-form-item>
+        <el-form-item>
+          <city-area-time-filter :key="filterKey" :show-city="false" :show-area="false" :show-time="true" @change="onCatChange" />
+          <el-button type="primary" @click="getTableData">搜索</el-button>
+          <el-button @click="openDialog()">新增乘客</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="gva-table-box">
+      <el-table :data="tableData" border stripe>
+        <el-table-column label="ID" prop="ID" width="70" />
+        <el-table-column label="用户ID" prop="userId" width="90" />
+        <el-table-column label="手机号" prop="mobile" width="140" />
+        <el-table-column label="昵称" prop="nickname" min-width="140" />
+        <el-table-column label="状态" width="90">
+          <template #default="scope">
+            <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">{{ scope.row.status === 1 ? '正常' : '冻结' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="实名状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-tag :type="realNameTagType(row.realNameStatus)" effect="light" round>{{ realNameText(row.realNameStatus) }}</el-tag>
+        <el-table-column label="注册时间" prop="createdAt" width="180" />
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="scope">
+            <el-button link type="primary" @click="openDialog(scope.row)">编辑</el-button>
+            <el-button link type="danger" @click="onDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
-        <el-table-column label="账户状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-tag :type="accountTagType(row.accountStatus)" effect="light" round>{{ accountText(row.accountStatus) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="积分" width="90" align="right">
-          <template #default="{ row }">{{ row.pointBalance ?? 0 }}</template>
-        </el-table-column>
-        <el-table-column label="最近登录" width="180">
-          <template #default="{ row }">
-            <span v-if="row.lastLoginAt">{{ formatDateTime(row.lastLoginAt) }}</span>
-            <span v-else class="muted">从未登录</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="注册时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="90" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button type="info" link :loading="acting === row.passengerId" @click="openDetail(row)">详情</el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty description="暂无乘客数据" />
-        </template>
       </el-table>
-
-      <div class="pagination-bar">
-        <el-pagination
-          v-model:current-page="query.page"
-          v-model:page-size="query.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          background
-          @current-change="loadPassengers"
-          @size-change="loadPassengers"
-        />
-      </div>
-    </el-card>
-
-    <el-drawer v-model="detailVisible" title="乘客详情" size="460px">
-      <div v-if="detail" class="detail-body">
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="乘客ID">{{ detail.passengerId }}</el-descriptions-item>
-          <el-descriptions-item label="乘客号">{{ detail.passengerNo || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="昵称">{{ detail.nickname || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="手机号">{{ detail.mobile || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="实名状态">
-            <el-tag :type="realNameTagType(detail.realNameStatus)" effect="light">{{ realNameText(detail.realNameStatus) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="账户状态">
-            <el-tag :type="accountTagType(detail.accountStatus)" effect="light">{{ accountText(detail.accountStatus) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="积分余额">{{ detail.pointBalance ?? 0 }}</el-descriptions-item>
-          <el-descriptions-item label="第三方来源">{{ detail.externalProvider || '自有账号' }}</el-descriptions-item>
-          <el-descriptions-item label="最近登录">
-            {{ detail.lastLoginAt ? formatDateTime(detail.lastLoginAt) : '从未登录' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="注册时间">{{ formatDateTime(detail.createdAt) }}</el-descriptions-item>
-        </el-descriptions>
-      </div>
+      <el-pagination v-model:current-page="searchInfo.page" v-model:page-size="searchInfo.pageSize" :total="total"
+        :page-sizes="[10, 30, 50]" layout="total, sizes, prev, pager, next, jumper" @size-change="getTableData"
+        @current-change="getTableData" />
+    </div>
+    <el-drawer v-model="dialogVisible" :title="form.ID ? '编辑乘客' : '新增乘客'" :size="appStore.drawerSize">
+      <el-form :model="form" label-width="80px">
+        <el-form-item label="手机号" required><el-input v-model="form.mobile" /></el-form-item>
+        <el-form-item label="昵称"><el-input v-model="form.nickname" /></el-form-item>
+        <el-form-item label="状态">
+          <el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="正常" inactive-text="冻结" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submit">确定</el-button>
+      </template>
     </el-drawer>
   </div>
 </template>
 
 <script setup>
-  import { onMounted, reactive, ref } from 'vue'
-  import { ElMessage } from 'element-plus'
-  import { getRidePassengerDetail, getRidePassengerList } from '@/api/ride'
+import { ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+  import { useAppStore } from '@/pinia'
+const appStore = useAppStore()
+import { getPassengerList, createPassenger, updatePassenger, deletePassenger } from '@/api/trip/trip'
+import CityAreaTimeFilter from '@/components/filters/CityAreaTimeFilter.vue'
 
-  defineOptions({ name: 'tripPassenger' })
+const tableData = ref([])
+const total = ref(0)
+const searchInfo = ref({ page: 1, pageSize: 10, keyword: '' })
+const catFilters = ref({ city: '', area: '', startTime: '', endTime: '' })
+const filterKey = ref(0)
+const onCatChange = (f) => { catFilters.value = f; getTableData() }
+const dialogVisible = ref(false)
+const form = ref({})
 
-  const realNameOptions = [
-    { value: 0, label: '未提交' },
-    { value: 1, label: '审核中' },
-    { value: 2, label: '已通过' },
-    { value: 3, label: '已驳回' }
-  ]
-  const accountOptions = [
-    { value: 0, label: '已冻结' },
-    { value: 1, label: '正常' },
-    { value: 2, label: '已注销' }
-  ]
-
-  const query = reactive({ page: 1, pageSize: 10, keyword: '', realNameStatus: '', accountStatus: '' })
-  const passengers = ref([])
-  const total = ref(0)
-  const loading = ref(false)
-  const acting = ref(0)
-  const detailVisible = ref(false)
-  const detail = ref(null)
-
-  const realNameText = (value) => realNameOptions.find((item) => item.value === Number(value))?.label || `未知(${value})`
-  const accountText = (value) => accountOptions.find((item) => item.value === Number(value))?.label || `未知(${value})`
-  const realNameTagType = (value) => {
-    if (Number(value) === 2) return 'success'
-    if (Number(value) === 1) return 'warning'
-    if (Number(value) === 3) return 'danger'
-    return 'info'
-  }
-  const accountTagType = (value) => {
-    if (Number(value) === 1) return 'success'
-    if (Number(value) === 0) return 'danger'
-    return 'info'
-  }
-
-  const formatDateTime = (value) => {
-    if (!value) return '-'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return value
-    const pad = (num) => String(num).padStart(2, '0')
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-  }
-
-  const loadPassengers = async () => {
-    loading.value = true
-    try {
-      const res = await getRidePassengerList({
-        page: query.page,
-        pageSize: query.pageSize,
-        keyword: query.keyword || undefined,
-        realNameStatus: query.realNameStatus === '' ? undefined : query.realNameStatus,
-        accountStatus: query.accountStatus === '' ? undefined : query.accountStatus
-      })
-      passengers.value = res.data.items || []
-      total.value = res.data.total || 0
-    } catch (error) {
-      ElMessage.error(error.message)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const search = () => {
-    query.page = 1
-    loadPassengers()
-  }
-
-  const resetQuery = () => {
-    query.page = 1
-    query.keyword = ''
-    query.realNameStatus = ''
-    query.accountStatus = ''
-    loadPassengers()
-  }
-
-  const openDetail = async (row) => {
-    acting.value = row.passengerId
-    try {
-      const res = await getRidePassengerDetail({ passengerId: row.passengerId })
-      detail.value = res.data.passenger
-      detailVisible.value = true
-    } catch (error) {
-      ElMessage.error(error.message)
-    } finally {
-      acting.value = 0
-    }
-  }
-
-  onMounted(loadPassengers)
+const getTableData = async () => {
+  const res = await getPassengerList({ ...searchInfo.value, ...catFilters.value })
+  if (res.code === 0) { tableData.value = res.data.list; total.value = res.data.total }
+}
+const openDialog = (row) => { form.value = row ? { ...row } : { status: 1 }; dialogVisible.value = true }
+const submit = async () => {
+  const res = form.value.ID ? await updatePassenger(form.value) : await createPassenger(form.value)
+  if (res.code === 0) { ElMessage.success('操作成功'); dialogVisible.value = false; getTableData() }
+}
+const onDelete = async (row) => {
+  try { await ElMessageBox.confirm(`确定删除乘客「${row.nickname || row.mobile}」吗？`, '提示', { type: 'warning' }) } catch (e) { return }
+  const res = await deletePassenger(row.ID)
+  if (res.code === 0) { ElMessage.success('删除成功'); getTableData() }
+}
+getTableData()
 </script>
-
-<style scoped>
-  .ride-passenger-page {
-    padding: 16px;
-  }
-  .filter-card {
-    margin-bottom: 12px;
-  }
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .filter-title h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
-  .filter-title span {
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-  }
-  .filter-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .status-select {
-    width: 130px;
-  }
-  .keyword-input {
-    width: 220px;
-  }
-  .passenger-cell {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .passenger-meta {
-    display: flex;
-    flex-direction: column;
-    line-height: 18px;
-  }
-  .nickname {
-    font-weight: 500;
-  }
-  .mobile {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-  }
-  .muted {
-    color: var(--el-text-color-placeholder);
-  }
-  .pagination-bar {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 12px;
-  }
-</style>

@@ -12,7 +12,7 @@ import service from '@/utils/request'
 // @Router /trip/order/list [get]
 export const getRideOrderList = (params) => {
   return service({
-    url: '/trip/order/list',
+    url: '/ride/order/list',
     method: 'get',
     params
   })
@@ -27,7 +27,7 @@ export const getRideOrderList = (params) => {
 // @Router /trip/order/detail [get]
 export const getRideOrderDetail = (params) => {
   return service({
-    url: '/trip/order/detail',
+    url: '/ride/order/detail',
     method: 'get',
     params
   })
@@ -43,7 +43,7 @@ export const getRideOrderDetail = (params) => {
 // @Router /trip/order/dispatch [post]
 export const dispatchRideOrder = (data) => {
   return service({
-    url: '/trip/order/dispatch',
+    url: '/ride/order/dispatch',
     method: 'post',
     data
   })
@@ -59,7 +59,7 @@ export const dispatchRideOrder = (data) => {
 // @Router /trip/order/advance [post]
 export const advanceRideOrder = (data) => {
   return service({
-    url: '/trip/order/advance',
+    url: '/ride/order/advance',
     method: 'post',
     data
   })
@@ -78,7 +78,7 @@ export const advanceRideOrder = (data) => {
 // @Router /trip/passenger/list [get]
 export const getRidePassengerList = (params) => {
   return service({
-    url: '/trip/passenger/list',
+    url: '/ride/passenger/list',
     method: 'get',
     params
   })
@@ -93,7 +93,7 @@ export const getRidePassengerList = (params) => {
 // @Router /trip/passenger/detail [get]
 export const getRidePassengerDetail = (params) => {
   return service({
-    url: '/trip/passenger/detail',
+    url: '/ride/passenger/detail',
     method: 'get',
     params
   })
@@ -112,7 +112,7 @@ export const getRidePassengerDetail = (params) => {
 // @Router /trip/vehicle/list [get]
 export const getRideVehicleList = (params) => {
   return service({
-    url: '/trip/vehicle/list',
+    url: '/ride/vehicle/list',
     method: 'get',
     params
   })
@@ -127,7 +127,7 @@ export const getRideVehicleList = (params) => {
 // @Router /trip/vehicle/detail [get]
 export const getRideVehicleDetail = (params) => {
   return service({
-    url: '/trip/vehicle/detail',
+    url: '/ride/vehicle/detail',
     method: 'get',
     params
   })
@@ -145,7 +145,7 @@ export const getRideVehicleDetail = (params) => {
 // @Router /trip/dispatch/list [get]
 export const getRideDispatchList = (params) => {
   return service({
-    url: '/trip/dispatch/list',
+    url: '/ride/dispatch/list',
     method: 'get',
     params
   })
